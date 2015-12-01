@@ -1,0 +1,202 @@
+Communication Protocol
+======================
+
+The Mega 2560 DALI system acts as a DALI master so it can send/receive
+DALI commands to/from its slaves according to an host system's
+commands.
+
+Here the communication protocol between the host command and the Mega
+2560 DALI system.
+
+The communication port is a standard UART at 115200 8N1.
+
+Each command is syncronous, that is for each command we should get an
+answer before the cmd_answer_timeout time expires. If we get no
+answers before the cmd_answer_timeout time and after cmd_answer_retries
+retries the system must be considered faulty.
+
+By default for all commands the cmd_answer_timeout
+is set to 200ms and cmd_answer_retries is set to 5.
+
+All commands/answers are strings written in ASCII terminated by
+'\n' (max lenght is 128 bytes).
+
+For telnet compatibility the sequence "\r\n" is accepted as "\n".
+
+All numbers have base 16 (Hex).
+
+All answers are in this form:
+
+	TXXX..XXX\n
+
+where:
+
+ - T: the type of answer, where 'O' is for ok and 'E' is for error
+
+ - X: an optional argument byte 
+
+
+
+Remap Commands:
+---------------
+
+- remap all: start remapping all slaves on all busses.
+
+        R\n
+
+The remap procedure needs several seconds to accomplish its duty so the host should
+check for the end by using the command "Rf" (see below).
+
+- remap unknown: start remapping slaves which haven't short address on all busses.
+
+        Ru\n
+
+The remap procedure needs several seconds to accomplish its duty so the host should
+check for the end by using the command "Rf" (see below).
+
+During this stage all other commands will return the error code "BUSY" (see error codes paragraph).
+
+- test for remap finished
+
+        Rf\n
+
+The answer byte is 0x00 for "yes" and a value from 1 to 100 for "no" representing the percentage
+of accomplished job.
+
+For this command the answer timeout is 500ms.
+
+- remap all abort
+
+        RA\n
+
+Ask for the remapping procedure abort sequence.
+
+If the master returns an error it means that the abort procedure is failed and it must be issued again.
+
+
+Single Device Commands:
+-----------------------
+
+- device info request on bus 0xb at address 0xXX
+
+        dibXX\n
+
+The answer bytes are the following meaning:
+
+	[0] --> Dev type
+	[1] --> Minimum arc value
+	[2] --> Maximum arc value
+	[3] --> Actual arc value
+
+- device ON on bus 0xb at address 0xXX
+
+        d1bXX\n
+
+Turn on light (or whatever) on the slave device.
+
+- device OFF on bus 0xb at address 0xXX
+
+        d0bXX\n
+
+Turn off light (or whatever) on the slave device.
+
+- device SET ARC at value 0xPP on bus 0xb at address 0xXX
+
+        dabXXPP\n
+
+Set the arc light (or whatever) at specified power on the slave device.
+
+- device CONF in depends of the DevType on bus 0xb at address 0xXX
+
+        dcbXX\n
+
+Execute the correct command sequence for configure the device.
+
+
+Group Device Commands:
+----------------------
+
+- group ON on bus 0xb for group 0xG
+
+        g1bG\n
+
+Turn on light (or whatever) on all slave devices on bus 0xb and in group 0xG.
+
+- group OFF on bus 0xb for group 0xG
+
+        g0bG\n
+
+Turn off light (or whatever) on all slave devices on bus 0xb and in group 0xG.
+
+- group SET ARC at value 0xPP on bus 0xb for group 0xG
+
+        gabGPP\n
+
+Set the arc light (or whatever) at specified power on all slave devices in a group.
+
+
+Bus Commands:
+-------------
+
+- bus detect all slaves
+
+        bdb\n
+
+Detect all sleave devices on bus 0xb.
+
+The answer is a 65 bytes long string where:
+
+* the first element is the return code,
+
+* the i-th element is not 0 if the i-th slave device is present on the bus. 
+
+
+- bus 0xb set all ON
+
+        b1b\n 
+
+Turn on light (or whatever) on all slaves on specified bus.
+
+
+- bus 0xb set all OFF
+
+        b0b\n 
+
+Turn off light (or whatever) on all slaves on specified bus.
+
+
+- bus 0xb set arc at value 0xPP on all slaves on specified bus
+
+        babPP\n
+
+Set the arc light (or whatever) at specified power on all slave devices on speciefied bus.
+
+
+Error codes
+-----------
+
+Here a list of the error codes whose each DALI command can return.
+
+=== Invalid command (0x01)
+
+The submitted command is not valid.
+
+=== Unsupported command (0x02)
+
+The submitted command is not been implemented yet.
+
+=== Bus busy (0x03)
+
+The submitted command cannot be executed because the master is busy.
+
+=== Invalid BUS ID (0x20)
+
+The submitted bus ID is not valid.
+
+=== Invalid DEV address (0x30)
+
+Does not exist any device at this DEV address.
+
+=== Timeout (0x90)
+
+Returned each time a timeout expires.
