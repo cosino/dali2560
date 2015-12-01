@@ -166,7 +166,7 @@ uint8_t Dali::setDevAddresses(uint8_t start_addr, readdr_type all)
 uint32_t Dali::findDev(uint32_t base_addr, uint32_t delta_addr, uint8_t n)
 {
 	if (this->dali_cmd & 0x01)
-		return 0xFFFFFFFEE;
+		return 0xFFFFFFEE;
 	this->setSearch(base_addr);
 	
 	/* Control commands on hold during the remap (Abort or finish?) */
