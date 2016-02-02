@@ -49,7 +49,6 @@ void serialDali(void)
 
 	if (Serial.available()) {
 		msg[bytes_rx] = (char)Serial.read();
-		Serial.write(msg[bytes_rx]);
 		if (msg[bytes_rx] == '\n') {
 			if (msg[bytes_rx - 1] == '\r') /* Adjustment protocol */
 				msg[bytes_rx - 1] = '\n';
