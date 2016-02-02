@@ -86,8 +86,8 @@ void serialDali_rx(uint8_t errn, uint8_t * data, uint8_t n)
 				buf[1 + a] = data[a];
 			n_char = n;
 		}
-		buf[1 + n_char] = '\n';
-		buf[2 + n_char] = '\r';
+		buf[1 + n_char] = '\r';
+		buf[2 + n_char] = '\n';
 		Serial.write(buf, n_char + 3);
 	} else {
 		switch (errn) {
